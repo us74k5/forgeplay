@@ -83,8 +83,8 @@ def cleanup_loop():
 
 
 threading.Thread(
-target=cleanup_loop,
-daemon=True
+    target=cleanup_loop,
+    daemon=True
 ).start()
 
 purge_old_cache()
@@ -93,8 +93,8 @@ purge_old_cache()
 def find_cached_file(video_id):
 
     for f in os.listdir(CACHE_DIR):
-        if f.startswith(video_id+"."):
-            return os.path.join(CACHE_DIR,f)
+        if f.startswith(video_id + "."):
+            return os.path.join(CACHE_DIR, f)
 
     return None
 
@@ -116,56 +116,47 @@ request: DownloadRequest = Body(...)
 ):
     try:
 
-        ydl_opts={
+        ydl_opts = {
+            "format":
+            format_for_quality(
+                request.quality
+            ),
 
-        "format":
-        format_for_quality(
-            request.quality
-        ),
+            "outtmpl":
+            os.path.join(
+                CACHE_DIR,
+                "%(id)s.%(ext)s"
+            ),
 
-        "outtmpl":
-        os.path.join(
-            CACHE_DIR,
-            "%(id)s.%(ext)s"
-        ),
-
-        "noplaylist":True,
-        "cachedir":False,
-        "quiet":False,
-
-        "progress_hooks":[
-        lambda d:
-        print(
-        d.get("status"),
-        d.get("filename","")
-        )
-        ],
-
-        "logger":log
+            "noplaylist":True,
+            "cachedir":False,
+            "quiet":False,
+            "logger":log
         }
 
         with yt_dlp.YoutubeDL(
-        ydl_opts
+            ydl_opts
         ) as ydl:
 
-            info=ydl.extract_info(
+            info = ydl.extract_info(
                 request.url,
                 download=False
             )
 
-            video_id=info["id"]
+            video_id = info["id"]
 
-            cached=find_cached_file(
+            cached = find_cached_file(
                 video_id
             )
 
             if cached:
                 log.info(
-                f"Using cached {video_id}"
+                    f"Using cached {video_id}"
                 )
+
             else:
                 log.info(
-                f"Downloading {video_id}"
+                    f"Downloading {video_id}"
                 )
 
                 ydl.download(
@@ -173,14 +164,15 @@ request: DownloadRequest = Body(...)
                 )
 
         return {
-        "playerUrl":
-        f"http://127.0.0.1:8000/player/{video_id}"
+            "playerUrl":
+            f"http://127.0.0.1:8000/player/{video_id}"
         }
 
     except Exception as e:
+
         raise HTTPException(
-        status_code=500,
-        detail=str(e)
+            status_code=500,
+            detail=str(e)
         )
 
 
@@ -198,14 +190,14 @@ async def player(video_id:str):
 @app.get("/media/{video_id}")
 async def media(video_id:str):
 
-    path=find_cached_file(
+    path = find_cached_file(
         video_id
     )
 
     if not path:
         raise HTTPException(
-        status_code=404,
-        detail="Video not found"
+            status_code=404,
+            detail="Video not found"
         )
 
     return FileResponse(
@@ -225,12 +217,16 @@ if __name__ == "__main__":
 
     import uvicorn
     import pystray
+    import webbrowser
 
     from PIL import Image, ImageDraw
     from pystray import MenuItem as item
 
 
     def run_server():
+
+        time.sleep(1)
+
         uvicorn.run(
             app,
             host="127.0.0.1",
@@ -241,13 +237,13 @@ if __name__ == "__main__":
 
     def tray_image():
 
-        img=Image.new(
+        img = Image.new(
             "RGB",
             (64,64),
             "black"
         )
 
-        d=ImageDraw.Draw(img)
+        d = ImageDraw.Draw(img)
 
         d.rectangle(
             [18,18,46,46],
@@ -258,13 +254,14 @@ if __name__ == "__main__":
 
 
     def open_control(icon,item):
-        import webbrowser
+
         webbrowser.open(
-        "http://127.0.0.1:8000/docs"
+            "http://127.0.0.1:8000/docs"
         )
 
 
     def quit_app(icon,item):
+
         icon.stop()
         os._exit(0)
 
@@ -275,10 +272,10 @@ if __name__ == "__main__":
     ).start()
 
 
-    tray=pystray.Icon(
-        "YTLocalHelper",
+    tray = pystray.Icon(
+        "ForgePlayHelper",
         tray_image(),
-        "YT Local Helper",
+        "ForgePlay Helper",
         menu=pystray.Menu(
             item(
                 "Open Control",
