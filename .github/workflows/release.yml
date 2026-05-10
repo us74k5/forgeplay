@@ -30,7 +30,7 @@ jobs:
 
       - name: Build executable
         working-directory: helper
-        run: pyinstaller --onefile --windowed --name ForgePlayHelper main.py
+        run: pyinstaller --onefile --name ForgePlayHelper main.py
 
       - name: Verify build output
         run: dir helper\dist
