@@ -1,7 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "My Extension",
-    "version": "1.0",
+    "name": "ForgePlay",
+    "version": "1.0.0",
+    "description": "Open supported YouTube videos through the local ForgePlay Helper.",
     "permissions": [
         "activeTab",
         "tabs",
@@ -10,7 +11,7 @@
     ],
     "host_permissions": [
         "https://www.youtube.com/*",
-        "http://127.0.0.1/*"
+        "http://127.0.0.1:8000/*"
     ],
     "background": {
         "service_worker": "background.js"

@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-yt-dlp
-pystray
-pillow
+fastapi==0.136.1
+uvicorn==0.46.0
+yt-dlp==2026.3.17
+pystray==0.19.5
+pillow==12.2.0

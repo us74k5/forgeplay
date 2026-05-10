@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,22 +21,57 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: helper/requirements.txt
 
-      - name: Install dependencies
-        working-directory: helper
+      - name: Resolve version
+        shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          $refName = "${{ github.ref_name }}"
+          if ($refName -match '^v(.+)$') {
+            $version = $Matches[1]
+          } else {
+            $version = "0.0.0-dev"
+          }
+          "FORGEPLAY_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Build executable
+      - name: Compile helper source
         working-directory: helper
-        run: pyinstaller --onefile --name ForgePlayHelper main.py
+        run: python -m py_compile main.py
 
-      - name: Verify build output
-        run: dir helper\dist
+      - name: Build helper executable
+        working-directory: helper
+        shell: pwsh
+        run: .\build.ps1
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DMyAppVersion=$env:FORGEPLAY_VERSION" "installer\installer.iss"
+
+      - name: Verify build outputs
+        shell: pwsh
+        run: |
+          Get-ChildItem helper\dist
+          Get-ChildItem installer -Filter "ForgePlaySetup*.exe"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ForgePlay-${{ env.FORGEPLAY_VERSION }}-windows
+          path: |
+            helper/dist/ForgePlayHelper.exe
+            installer/ForgePlaySetup.exe
 
       - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: helper/dist/ForgePlayHelper.exe
+          files: |
+            helper/dist/ForgePlayHelper.exe
+            installer/ForgePlaySetup.exe
