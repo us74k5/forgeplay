@@ -13,7 +13,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -31,14 +30,12 @@ jobs:
 
       - name: Build executable
         working-directory: helper
-        run: |
-          pyinstaller ^
-            --onefile ^
-            --windowed ^
-            --name ForgePlayHelper ^
-            main.py
+        run: pyinstaller --onefile --windowed --name ForgePlayHelper main.py
 
-      - name: Upload release
+      - name: Verify build output
+        run: dir helper\dist
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: helper/dist/ForgePlayHelper.exe
